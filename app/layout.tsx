@@ -4,6 +4,7 @@ import "./globals.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import Footer from "./components/Footer";
+import Providers from "./components/Providers";
 
 config.autoAddCss = false;
 
@@ -86,8 +87,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${openSans.variable} ${montserrat.variable} antialiased`}>
-        {children}
-        <Footer />
+        <Providers>
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
