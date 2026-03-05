@@ -2,258 +2,109 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
-import Image from 'next/image';
-import Link from 'next/link';
 import InvestmentForm from '@/components/InvestmentForm';
+import ProjectHero, { type ProjectHeroData } from '@/components/projects/ProjectHero';
+import { createClient } from '@/lib/supabase/client';
+
+const SLUG = 'padel_buenos_aires';
+const DEFAULT_IMAGE = '/proyectos/mvp_padel_court.png';
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 export default function PadelBuenosAires() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [project, setProject] = useState({
-    title: 'Complejo de Padel',
-    location: 'Buenos Aires, Argentina',
-    expectedYieldPercent: 20,
-    image: '/proyectos/mvp_padel_court.png',
-    status: 'abierto',
-    targetGoalUsd: 200000,
-    committedUsd: 0,
-    progressPercent: 0,
-    description: 'Complejo de pádel con 3 canchas profesionales, ubicado en zona estratégica de Buenos Aires.',
-    sportType: 'Pádel',
-    roiYears: 3,
-    revenuePercentPerYear: 20,
-    revenuePeriodYears: 3,
-    features: [
-      '3 canchas profesionales de pádel',
-      'Ubicación estratégica en Buenos Aires',
-      'Instalaciones de primera calidad',
-      'Gestión profesional y operación continua',
-      'Acceso a eventos y torneos exclusivos',
-    ],
-    investmentDetails: {
-      minimumInvestment: 100,      
-      investmentUnit: 100,
-    },
-  });
+  const [project, setProject] = useState<ProjectHeroData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProjectData = async () => {
+    const fetchProject = async () => {
       try {
-        const response = await fetch('https://sportchain.itzimi.com/api/info', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        setError(null);
+        const supabase = createClient();
+        const { data, error: fetchError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('slug', SLUG)
+          .eq('active', true)
+          .maybeSingle();
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            const { capital, percentage } = result.data;
-            
-            setProject(prevProject => ({
-              ...prevProject,
-              committedUsd: capital || prevProject.committedUsd,
-              progressPercent: percentage || prevProject.progressPercent
-            }));
-          }
+        if (fetchError) {
+          setError(fetchError.message);
+          setProject(null);
+          return;
         }
-      } catch (error) {
-        console.error('Error fetching project data:', error);
-        // Keep default values if API fails
+        if (!data) {
+          setError('Proyecto no encontrado');
+          setProject(null);
+          return;
+        }
+        setProject({
+          title: data.title,
+          location: data.location ?? '',
+          description: data.description ?? '',
+          image: data.image_url ?? DEFAULT_IMAGE,
+          status: (data.status ?? 'abierto').toLowerCase(),
+          targetGoalUsd: Number(data.amount_target_usd) || 0,
+          committedUsd: Number(data.amount_committed_usd) || 0,
+          progressPercent: Number(data.progress_committed_percent) ?? 0,
+          expectedYieldPercent: Number(data.yield_expected_percent) || 0,
+          projectLifeYears: data.project_life_years ?? null,
+          minimumInvestmentUsd: Number(data.minimum_investment_usd) || 100,
+          sportType: data.sport ?? 'Pádel',
+        });
+      } catch (err) {
+        console.error('Error fetching project:', err);
+        setError(err instanceof Error ? err.message : 'Error al cargar el proyecto');
+        setProject(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchProjectData();
+    fetchProject();
   }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen py-20" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-48 rounded bg-gray-300/20" />
+            <div className="h-12 w-3/4 rounded bg-gray-300/20" />
+            <div className="h-6 w-1/2 rounded bg-gray-300/20" />
+            <div className="grid grid-cols-3 gap-3 mt-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 rounded-lg bg-gray-300/20" />
+              ))}
+            </div>
+            <div className="h-24 rounded bg-gray-300/20 mt-6" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <main className="min-h-screen py-20" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+          <p className="text-lg" style={{ color: 'var(--color-subtle-text)' }}>
+            {error ?? 'Proyecto no encontrado'}
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            {/* Project Info */}
-            <div className="md:col-span-8">
-              {/* Etiquetas superiores */}
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span
-                  className="text-xs font-bold px-3 py-1.5 rounded-full"
-                  style={{
-                    backgroundColor: 'var(--color-accent-gold)',
-                    color: 'var(--color-primary)',
-                  }}
-                >
-                  {project.status.toUpperCase()}
-                </span>
-                <span
-                  className="text-xs font-bold px-3 py-1.5 rounded-full text-white"
-                  style={{ backgroundColor: 'var(--color-primary)' }}
-                >
-                  {project.sportType.toUpperCase()}
-                </span>
-              </div>
-
-              {/* Título y ubicación */}
-              <h1
-                className="text-4xl md:text-5xl font-bold mb-3"
-                style={{ color: 'var(--foreground)' }}
-              >
-                {project.title}
-              </h1>
-              <p
-                className="text-sm md:text-base mb-4"
-                style={{ color: 'var(--color-subtle-text)' }}
-              >
-                {project.location}
-              </p>
-
-              {/* Snapshot de proyecto */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6 text-sm">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-muted)' }}>
-                  <p className="text-[11px] mb-1" style={{ color: 'var(--color-subtle-text)' }}>
-                    Estado
-                  </p>
-                  <p className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                    {project.status === 'abierto' ? 'Abierto a inversores' : 'Próximamente'}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-muted)' }}>
-                  <p className="text-[11px] mb-1" style={{ color: 'var(--color-subtle-text)' }}>
-                    Ticket mínimo
-                  </p>
-                  <p className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                    Desde {formatCurrency(100)}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-muted)' }}>
-                  <p className="text-[11px] mb-1" style={{ color: 'var(--color-subtle-text)' }}>
-                    Porcentaje recaudado hasta la fecha
-                  </p>
-                  <p className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                    {project.progressPercent}%                  
-                  </p>
-                </div>
-              </div>
-
-              {/* Descripción breve */}
-              <p
-                className="text-base leading-relaxed mb-8"
-                style={{ color: 'var(--foreground)' }}
-              >
-                {project.description}
-              </p>
-
-              {/* Métricas clave */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div
-                  className="p-4 rounded-lg"
-                  style={{
-                    backgroundColor: 'var(--color-muted)',
-                    border: '1px solid rgba(220, 196, 142, 0.3)',
-                  }}
-                >
-                  <p
-                    className="text-sm mb-1"
-                    style={{ color: 'var(--color-subtle-text)' }}
-                  >
-                    Rendimiento esperado
-                  </p>
-                  <p
-                    className="text-3xl font-bold"
-                    style={{ color: 'var(--color-accent-gold)' }}
-                  >
-                    {project.expectedYieldPercent}% Anual
-                  </p>
-                </div>
-                <div
-                  className="p-4 rounded-lg"
-                  style={{
-                    backgroundColor: 'var(--color-muted)',
-                    border: '1px solid rgba(220, 196, 142, 0.3)',
-                  }}
-                >
-                  <p
-                    className="text-sm mb-1"
-                    style={{ color: 'var(--color-subtle-text)' }}
-                  >
-                    Período estimado del proyecto
-                  </p>
-                  <p
-                    className="text-3xl font-bold"
-                    style={{ color: 'var(--color-accent-gold)' }}
-                  >
-                    {project.roiYears} años
-                  </p>
-                </div>
-                {/* Progreso de financiación */}
-              <div>
-                <div
-                  className="flex justify-between text-sm mb-2"
-                  style={{ color: 'var(--color-subtle-text)' }}
-                >
-                  <span>
-                    $
-                    {Number(project.committedUsd).toLocaleString('en-US', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}{' '}
-                    comprometido
-                  </span>
-                  <span>Meta {formatCurrency(project.targetGoalUsd)}</span>
-                </div>
-                <div
-                  className="w-full h-3 rounded-full overflow-hidden"
-                  style={{ backgroundColor: 'rgba(220, 196, 142, 0.2)' }}
-                >
-                  <div
-                    className="h-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(Math.max(project.progressPercent, 0), 100)}%`,
-                      backgroundColor: 'var(--color-accent-gold)',
-                    }}
-                  />
-                </div>
-                <div
-                  className="text-right text-sm mt-2"
-                  style={{ color: 'var(--color-subtle-text)' }}
-                >
-                  {project.progressPercent}% completado
-                </div>
-              </div>
-
-              </div>
-
-              
-
-              {/* CTA principal */}
-              <button
-                onClick={() => setIsFormOpen(true)}
-                className="btn-gold inline-block px-8 py-4 rounded-lg text-lg font-bold cursor-pointer"
-                style={{ color: 'var(--color-primary)' }}
-              >
-                Estoy interesado en invertir
-              </button>
-            </div>
-
-            {/* Image */}
-            <div className="relative h-96 lg:h-[500px] md:col-span-4 rounded-xl overflow-hidden">
-              <Image
-                src={project.image}
-                alt={project.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(min-width: 1024px) 50vw, 100vw"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      <ProjectHero project={project} onInvestClick={() => setIsFormOpen(true)} />
 
 <section className="py-16" style={{ backgroundColor: 'var(--color-muted)' }}>
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -312,7 +163,7 @@ export default function PadelBuenosAires() {
               Ubicación
             </p>
             <p className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
-              Buenos Aires, Argentina
+              {project.location || 'Buenos Aires, Argentina'}
             </p>
           </div>
 
@@ -398,7 +249,7 @@ export default function PadelBuenosAires() {
               Costo total del proyecto
             </p>
             <p className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
-              USD 200,000
+              {formatCurrency(project.targetGoalUsd)}
             </p>
           </div>
 
@@ -408,7 +259,7 @@ export default function PadelBuenosAires() {
               Aporte mínimo
             </p>
             <p className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
-              Desde USD 100
+              Desde {formatCurrency(project.minimumInvestmentUsd)}
             </p>
           </div>
 
@@ -418,7 +269,7 @@ export default function PadelBuenosAires() {
               Rendimiento anual estimado
             </p>
             <p className="text-xl font-semibold" style={{ color: 'var(--color-accent-gold)' }}>
-              18% – 20%
+              {project.expectedYieldPercent}%
             </p>
           </div>
 
@@ -428,7 +279,7 @@ export default function PadelBuenosAires() {
               Horizonte de inversión
             </p>
             <p className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
-              3 – 5 años
+              {project.projectLifeYears ?? 3} – 5 años
             </p>
           </div>
 
