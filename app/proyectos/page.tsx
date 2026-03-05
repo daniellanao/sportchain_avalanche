@@ -117,7 +117,7 @@ export default function Proyectos() {
                 className="rounded-2xl p-4 backdrop-blur-sm"
                 style={{ 
                   backgroundColor: 'var(--color-surface)', 
-                  border: '1px solid rgba(220, 196, 142, 0.35)'
+                  border: '2px solid #114488'
                 }}
               >
                 <div className="relative mb-4">

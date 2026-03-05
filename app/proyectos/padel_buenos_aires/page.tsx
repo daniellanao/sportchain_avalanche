@@ -132,10 +132,10 @@ export default function PadelBuenosAires() {
                 </div>
                 <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-muted)' }}>
                   <p className="text-[11px] mb-1" style={{ color: 'var(--color-subtle-text)' }}>
-                    Horizonte estimado
+                    Porcentaje recaudado hasta la fecha
                   </p>
                   <p className="font-semibold" style={{ color: 'var(--foreground)' }}>
-                    3 años                  
+                    {project.progressPercent}%                  
                   </p>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function PadelBuenosAires() {
                 className="btn-gold inline-block px-8 py-4 rounded-lg text-lg font-bold cursor-pointer"
                 style={{ color: 'var(--color-primary)' }}
               >
-                Invertir
+                Estoy interesado en invertir
               </button>
             </div>
 
@@ -471,7 +471,7 @@ export default function PadelBuenosAires() {
             className="btn-gold inline-block px-8 py-4 rounded-lg text-lg font-bold cursor-pointer"
             style={{ color: 'var(--color-primary)' }}
           >
-            Invertir Ahora
+            Estoy interesado en invertir
           </button>
         </div>
       </section>
