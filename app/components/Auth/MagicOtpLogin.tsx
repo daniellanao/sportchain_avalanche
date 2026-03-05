@@ -67,7 +67,7 @@ export default function MagicOtpLogin() {
       return;
     }
 
-    router.push('/');
+    router.push('/dashboard');
     router.refresh();
   };
 

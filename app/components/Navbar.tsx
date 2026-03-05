@@ -23,8 +23,8 @@ export default function Navbar() {
   const navItems = [
     { name: 'INICIO', href: '/', icon: 'home' },
     { name: 'PROYECTOS', href: '/proyectos', icon: 'project' },
-    { name: 'EVENTOS', href: '/eventos', icon: 'coins' },
-    { name: 'DEMO DASHBOARD', href: '/demo', icon: 'demo' }
+    { name: 'EVENTOS', href: '/eventos', icon: 'coins' },    
+    ...(user ? [{ name: 'DASHBOARD', href: '/dashboard', icon: 'dashboard' }] : []),
   ];
 
   return (
@@ -68,21 +68,27 @@ export default function Navbar() {
             })}
             {!loading && (
               user ? (
-                <div className="relative">
+                <div className="relative ml-2">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 text-white hover:text-[var(--color-accent-gold)] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 border-2 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      backgroundColor: 'var(--color-accent-gold)',
+                      color: 'var(--color-primary)',
+                      borderColor: 'var(--color-accent-gold)',
+                      boxShadow: '0 2px 8px rgba(220, 196, 142, 0.35)',
+                    }}
                   >
-                    <FontAwesomeIcon icon={faUser} />
-                    <span className="text-sm max-w-[120px] truncate">{user.email}</span>
+                    <FontAwesomeIcon icon={faUser} className="shrink-0" />
+                    <span className="text-sm max-w-[140px] truncate">{user.email}</span>
                   </button>
                   {isUserMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 py-2 w-48 rounded shadow-lg z-50 bg-white" style={{ color: 'var(--color-primary)' }}>
+                      <div className="absolute right-0 mt-2 py-2 w-48 rounded-lg shadow-xl z-50 bg-white border border-gray-100" style={{ color: 'var(--color-primary)' }}>
                         <button
                           onClick={() => { signOut(); setIsUserMenuOpen(false); }}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                          className="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 rounded mx-1 transition-colors"
                         >
                           <FontAwesomeIcon icon={faRightFromBracket} />
                           Cerrar sesión
@@ -94,7 +100,7 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className="font-medium pb-1 border-b-2 border-transparent text-white hover:text-[var(--color-accent-gold)] transition-colors duration-200"
+                  className="ml-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 border-2 border-[var(--color-accent-gold)] bg-transparent text-[var(--color-accent-gold)] hover:bg-[var(--color-accent-gold)] hover:text-[var(--color-primary)] hover:shadow-[0_2px_8px_rgba(220,196,142,0.35)] scale-100 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   INICIAR SESIÓN
                 </Link>
@@ -137,11 +143,11 @@ export default function Navbar() {
               })}
               {!loading && (
                 user ? (
-                  <div className="px-3 py-2 border-l-2 border-transparent">
-                    <p className="text-white text-sm truncate mb-2">{user.email}</p>
+                  <div className="px-3 py-3 mt-2 mx-2 rounded-lg border-2" style={{ borderColor: 'var(--color-accent-gold)', backgroundColor: 'rgba(220, 196, 142, 0.15)' }}>
+                    <p className="text-white text-sm truncate mb-2 font-medium">{user.email}</p>
                     <button
                       onClick={() => { signOut(); setIsMenuOpen(false); }}
-                      className="flex items-center gap-2 text-white hover:text-[var(--color-accent-gold)] text-sm"
+                      className="flex items-center gap-2 text-[var(--color-accent-gold)] hover:opacity-90 text-sm font-medium"
                     >
                       <FontAwesomeIcon icon={faRightFromBracket} />
                       Cerrar sesión
@@ -150,8 +156,8 @@ export default function Navbar() {
                 ) : (
                   <Link
                     href="/login"
-                    className="block px-3 py-2 text-white hover:text-[var(--color-accent-gold)] border-l-2 border-transparent"
-                    style={{ letterSpacing: '0.05em' }}
+                    className="mx-2 mt-2 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium border-2 transition-colors"
+                    style={{ borderColor: 'var(--color-accent-gold)', color: 'var(--color-accent-gold)' }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     INICIAR SESIÓN
