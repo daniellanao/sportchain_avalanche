@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar';
+import Navbar from '@/components/Navbar';
 import Image from 'next/image';
 import Link from 'next/link';
-import InvestmentForm from '../../components/InvestmentForm';
+import InvestmentForm from '@/components/InvestmentForm';
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });

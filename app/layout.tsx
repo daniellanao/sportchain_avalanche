@@ -3,8 +3,8 @@ import { Open_Sans, Montserrat } from "next/font/google";
 import "./globals.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
-import Footer from "./components/Footer";
-import Providers from "./components/Providers";
+import Footer from "@/components/Footer";
+import Providers from "@/components/Providers";
 
 config.autoAddCss = false;
 

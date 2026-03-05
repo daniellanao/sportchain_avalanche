@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import ProjectCard, { type Project } from '../components/ProjectCard';
+import Navbar from '@/components/Navbar';
+import ProjectCard, { type Project } from '@/components/ProjectCard';
 import { createClient } from '@/lib/supabase/client';
 
 /** DB row from public.projects */

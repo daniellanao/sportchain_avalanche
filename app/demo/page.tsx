@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Navbar from '../components/Navbar';
+import Navbar from '@/components/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLink, faCheckCircle, faClock, faSpinner } from '@fortawesome/free-solid-svg-icons';
 

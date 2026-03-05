@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import Navbar from '../components/Navbar';
-import EventCard from '../components/EventCard';
-import EventUpcomingCard, { type UpcomingEvent } from '../components/EventUpcomingCard';
+import Navbar from '@/components/Navbar';
+import EventCard from '@/components/EventCard';
+import EventUpcomingCard, { type UpcomingEvent } from '@/components/EventUpcomingCard';
 import { events, upcomingEvent } from '@/data/events';
 
 export const metadata: Metadata = {

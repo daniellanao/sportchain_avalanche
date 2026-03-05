@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons';
 import { Montserrat } from "next/font/google";
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 const montserrat = Montserrat({
   subsets: ['latin'],

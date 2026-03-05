@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '../components/Navbar';
-import { useAuth } from '@/app/context/AuthContext';
-import { useProfile } from '../hooks/useProfile';
+import Navbar from '@/components/Navbar';
+import { useAuth } from '@/context/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { isProfileComplete } from '@/lib/supabase/profiles';
-import CompleteProfileForm from '../components/Auth/CompleteProfileForm';
+import CompleteProfileForm from '@/components/Auth/CompleteProfileForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLink, faCheckCircle, faClock, faSpinner } from '@fortawesome/free-solid-svg-icons';
 

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import Navbar from './components/Navbar';
-import Hero from './components/home/Hero';
-import MisionVision from './components/home/MisionVision';
-import Roadmap from './components/home/Roadmap';
-import Community from './components/home/Community';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/home/Hero';
+import MisionVision from '@/components/home/MisionVision';
+import Roadmap from '@/components/home/Roadmap';
+import Community from '@/components/home/Community';
 
 
 export const metadata: Metadata = {

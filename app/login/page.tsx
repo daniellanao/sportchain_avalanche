@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Navbar from '../components/Navbar';
-import MagicOtpLogin from '../components/Auth/MagicOtpLogin';
+import Navbar from '@/components/Navbar';
+import MagicOtpLogin from '@/components/Auth/MagicOtpLogin';
 
 export const metadata: Metadata = {
   title: 'Iniciar sesión',
