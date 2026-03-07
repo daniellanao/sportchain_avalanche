@@ -58,33 +58,45 @@ export default function Proyectos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setError(null);
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('active', true)
-          .order('created_at', { ascending: true });
+  const fetchProjects = async () => {
+    try {
+      setError(null);
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: true });
 
-        if (fetchError) {
-          setError(fetchError.message);
-          setProjects([]);
-          return;
-        }
-        setProjects((data ?? []).map(rowToProject));
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError(err instanceof Error ? err.message : 'Error al cargar proyectos');
+      if (fetchError) {
+        setError(fetchError.message);
         setProjects([]);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
+      setProjects((data ?? []).map(rowToProject));
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar proyectos');
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProjects();
+  }, []);
+
+  // Refetch when user returns to this page/tab so list shows latest committed amounts from DB
+  useEffect(() => {
+    const onVisible = () => fetchProjects();
+    const onFocus = () => fetchProjects();
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   return (

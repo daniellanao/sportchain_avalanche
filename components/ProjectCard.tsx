@@ -92,25 +92,20 @@ export default function ProjectCard({ project: p }: { project: Project }) {
         {p.title}
       </h3>
 
-      <div
-        className="mb-4"
-        style={{ minHeight: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-      >
+      <div className="mb-1 h-[4.5rem] flex flex-col justify-center" style={{ borderTop: '1px solid rgba(220, 196, 142, 0.3)' }}>
         {p.status === 'abierto' ? (
           <>
-            <div className="flex justify-between text-xs mb-2" style={{ color: 'var(--color-subtle-text)' }}>
-              <span>
-                $
-                {Number(p.committedUsd).toLocaleString('en-US', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}{' '}
-                comprometido
+            <div className="flex items-baseline justify-between gap-2 mb-1.5" style={{ color: 'var(--foreground)' }}>
+              <span className="text-sm font-semibold">
+                {formatCurrency(p.committedUsd)}
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--color-subtle-text)' }}>Comprometido</span>
               </span>
-              <span>Meta {formatCurrency(p.targetGoalUsd)}</span>
+              <span className="text-xs" style={{ color: 'var(--color-subtle-text)' }}>
+                Meta {formatCurrency(p.targetGoalUsd)}
+              </span>
             </div>
             <div
-              className="w-full h-2 rounded-full overflow-hidden"
+              className="w-full h-2.5 rounded-full overflow-hidden"
               style={{ backgroundColor: 'rgba(247, 211, 122, 0.22)' }}
             >
               <div
@@ -121,14 +116,16 @@ export default function ProjectCard({ project: p }: { project: Project }) {
                 }}
               />
             </div>
-            <div className="text-right text-xs mt-1" style={{ color: 'var(--color-subtle-text)' }}>
-              {p.progressPercent}%
+            <div className="flex justify-end mt-1.5">
+              <span className="text-sm font-bold" style={{ color: 'var(--color-accent-gold)' }}>
+                {p.progressPercent}% Progreso
+              </span>
             </div>
           </>
         ) : (
           <div
-            className="flex items-center justify-center w-full h-full text-center text-sm font-semibold"
-            style={{ color: 'var(--color-accent-gold)', minHeight: '48px' }}
+            className="flex items-center justify-center h-full text-center text-sm font-semibold"
+            style={{ color: 'var(--color-accent-gold)' }}
           >
             Próximamente
           </div>
@@ -136,7 +133,7 @@ export default function ProjectCard({ project: p }: { project: Project }) {
       </div>
 
       <div
-        className="flex items-center justify-between pt-4 mt-auto"
+        className="flex items-center justify-between pt-2 mt-auto"
         style={{ borderTop: '1px solid rgba(220, 196, 142, 0.3)' }}
       >
         <div>

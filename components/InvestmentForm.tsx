@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
-
+import { createClient } from '@/lib/supabase/client';
 
 interface InvestmentFormData {
   name: string;
@@ -14,10 +14,12 @@ interface InvestmentFormData {
 interface InvestmentFormProps {
   isOpen: boolean;
   onClose: () => void;
+  projectId: string;
   projectTitle: string;
+  onSuccess?: () => void;
 }
 
-export default function InvestmentForm({ isOpen, onClose, projectTitle }: InvestmentFormProps) {
+export default function InvestmentForm({ isOpen, onClose, projectId, projectTitle, onSuccess }: InvestmentFormProps) {
   const [formData, setFormData] = useState<InvestmentFormData>({
     name: '',
     email: '',
@@ -42,35 +44,33 @@ export default function InvestmentForm({ isOpen, onClose, projectTitle }: Invest
     setErrorMessage('');
 
     try {
-      const response = await fetch('https://sportchain.itzimi.com/api/interested_investors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          proyecto: projectTitle
-        }),
+      const amountUsd = parseFloat(formData.amount);
+      if (Number.isNaN(amountUsd) || amountUsd <= 0) {
+        setSubmitStatus('error');
+        setErrorMessage('Por favor, ingresa un monto válido.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const supabase = createClient();
+      const { error } = await supabase.from('commitments').insert({
+        project_id: projectId,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        amount_usd: amountUsd,
       });
 
-      if (response.ok) {
-        setSubmitStatus('success');
-        // Reset form after successful submission
-        setTimeout(() => {
-          setFormData({
-            name: '',
-            email: '',
-            amount: ''
-          });
-          setSubmitStatus('idle');
-          onClose();
-        }, 2000);
-      } else {
-        const errorData = await response.json();
+      if (error) {
         setSubmitStatus('error');
-        setErrorMessage(errorData.message || 'Error al enviar el formulario');
+        setErrorMessage(error.message || 'Error al enviar el formulario');
+        return;
       }
-    } catch (error) {
+
+      setFormData({ name: '', email: '', amount: '' });
+      setSubmitStatus('idle');
+      onSuccess?.();
+      onClose();
+    } catch (err) {
       setSubmitStatus('error');
       setErrorMessage('Error de conexión. Por favor, inténtalo de nuevo.');
     } finally {
@@ -127,21 +127,6 @@ export default function InvestmentForm({ isOpen, onClose, projectTitle }: Invest
             <FontAwesomeIcon icon={faXmark} size="lg" />
           </button>
         </div>
-
-        {/* Success Message */}
-        {submitStatus === 'success' && (
-          <div 
-            className="mb-6 p-4 rounded-lg"
-            style={{ 
-              backgroundColor: 'rgba(220, 196, 142, 0.2)', 
-              border: '1px solid rgba(220, 196, 142, 0.4)'
-            }}
-          >
-            <p className="text-center font-medium" style={{ color: 'var(--color-accent-gold)' }}>
-              ¡Formulario enviado exitosamente! Nos pondremos en contacto contigo pronto.
-            </p>
-          </div>
-        )}
 
         {/* Error Message */}
         {submitStatus === 'error' && (

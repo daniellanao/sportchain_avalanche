@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import InvestmentForm from '@/components/InvestmentForm';
+import CommitmentSuccessModal from '@/components/CommitmentSuccessModal';
 import ProjectHero, { type ProjectHeroData } from '@/components/projects/ProjectHero';
 import { createClient } from '@/lib/supabase/client';
 
@@ -17,52 +18,54 @@ export default function PadelBuenosAires() {
   const [project, setProject] = useState<ProjectHeroData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  const fetchProject = async () => {
+    try {
+      setError(null);
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('slug', SLUG)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (fetchError) {
+        setError(fetchError.message);
+        setProject(null);
+        return;
+      }
+      if (!data) {
+        setError('Proyecto no encontrado');
+        setProject(null);
+        return;
+      }
+      setProject({
+        id: data.id,
+        title: data.title,
+        location: data.location ?? '',
+        description: data.description ?? '',
+        image: data.image_url ?? DEFAULT_IMAGE,
+        status: (data.status ?? 'abierto').toLowerCase(),
+        targetGoalUsd: Number(data.amount_target_usd) || 0,
+        committedUsd: Number(data.amount_committed_usd) || 0,
+        progressPercent: Number(data.progress_committed_percent) ?? 0,
+        expectedYieldPercent: Number(data.yield_expected_percent) || 0,
+        projectLifeYears: data.project_life_years ?? null,
+        minimumInvestmentUsd: Number(data.minimum_investment_usd) || 100,
+        sportType: data.sport ?? 'Pádel',
+      });
+    } catch (err) {
+      console.error('Error fetching project:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar el proyecto');
+      setProject(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProject = async () => {
-      try {
-        setError(null);
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('slug', SLUG)
-          .eq('active', true)
-          .maybeSingle();
-
-        if (fetchError) {
-          setError(fetchError.message);
-          setProject(null);
-          return;
-        }
-        if (!data) {
-          setError('Proyecto no encontrado');
-          setProject(null);
-          return;
-        }
-        setProject({
-          title: data.title,
-          location: data.location ?? '',
-          description: data.description ?? '',
-          image: data.image_url ?? DEFAULT_IMAGE,
-          status: (data.status ?? 'abierto').toLowerCase(),
-          targetGoalUsd: Number(data.amount_target_usd) || 0,
-          committedUsd: Number(data.amount_committed_usd) || 0,
-          progressPercent: Number(data.progress_committed_percent) ?? 0,
-          expectedYieldPercent: Number(data.yield_expected_percent) || 0,
-          projectLifeYears: data.project_life_years ?? null,
-          minimumInvestmentUsd: Number(data.minimum_investment_usd) || 100,
-          sportType: data.sport ?? 'Pádel',
-        });
-      } catch (err) {
-        console.error('Error fetching project:', err);
-        setError(err instanceof Error ? err.message : 'Error al cargar el proyecto');
-        setProject(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProject();
   }, []);
 
@@ -99,6 +102,16 @@ export default function PadelBuenosAires() {
       </main>
     );
   }
+
+  const handleCommitmentSuccess = () => {
+    setIsFormOpen(false);
+    setShowSuccessMessage(true);
+    // Delay refetch so backend trigger can update projects.amount_committed_usd / progress_committed_percent
+    const refetchAfter = (ms: number) => setTimeout(() => fetchProject(), ms);
+    refetchAfter(400);
+    refetchAfter(1200);
+    setTimeout(() => setShowSuccessMessage(false), 6000);
+  };
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
@@ -331,7 +344,15 @@ export default function PadelBuenosAires() {
       <InvestmentForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
+        projectId={project.id!}
         projectTitle={project.title}
+        onSuccess={handleCommitmentSuccess}
+      />
+
+      {/* Success message modal (same style as InvestmentForm) */}
+      <CommitmentSuccessModal
+        isOpen={showSuccessMessage}
+        onClose={() => setShowSuccessMessage(false)}
       />
     </main>
   );

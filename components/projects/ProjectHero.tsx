@@ -3,6 +3,7 @@
 import Image from 'next/image';
 
 export type ProjectHeroData = {
+  id?: string;
   title: string;
   location: string;
   description: string;
