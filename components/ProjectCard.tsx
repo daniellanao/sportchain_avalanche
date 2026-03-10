@@ -19,6 +19,8 @@ export type Project = {
   progressPercent: number;
   sportType: string;
   slug: string | null;
+  collectedUsd: number;
+  progressCollectedPercent: number;
 };
 
 const formatCurrency = (value: number) =>
