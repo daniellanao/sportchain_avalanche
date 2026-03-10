@@ -127,8 +127,8 @@ export default function ProjectsTable() {
           <table className="w-full min-w-[800px]">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(220, 196, 142, 0.3)' }}>
-                <th className="text-left py-3 px-4 text-sm font-semibold w-20" style={{ color: 'var(--color-subtle-text)' }}>Image</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Nombre</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold w-20" style={{ color: 'var(--color-subtle-text)' }}></th>
+                <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Proyecto</th>
                 
                 <th className="text-right py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Meta</th>
                 <th className="text-right py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}> Recaudado</th>

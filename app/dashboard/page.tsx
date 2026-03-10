@@ -10,20 +10,10 @@ import CompleteProfileForm from '@/components/Auth/CompleteProfileForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLink, faCheckCircle, faClock, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ProjectsTable from '@/components/dashboard/ProjectsTable';
+import InvestmentsTable from '@/components/dashboard/InvestmentsTable';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { createClient } from '@/lib/supabase/client';
 
 const PAYMENT_CONFIRMATION_KEY = 'sportchain_payment_confirmation';
-
-type InvestmentByProject = {
-  projectId: string;
-  projectTitle: string;
-  amountInvested: number;
-  status: 'active';
-  tokens: number;
-  claimable: number;
-  payoutReceived: number;
-};
 
 // Mock metrics (can be replaced later with real aggregates from transactions)
 const mockMetrics = {
@@ -50,10 +40,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useProfile(user?.id, user?.email ?? undefined);
-  const [claimingId, setClaimingId] = useState<string | null>(null);
   const [paymentConfirmation, setPaymentConfirmation] = useState<{ amount: number; projectTitle: string } | null>(null);
-  const [investments, setInvestments] = useState<InvestmentByProject[]>([]);
-  const [investmentsLoading, setInvestmentsLoading] = useState(true);
 
   useEffect(() => {
     if (loading) return;
@@ -62,60 +49,6 @@ export default function DashboardPage() {
       return;
     }
   }, [user, loading, router]);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setInvestmentsLoading(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        setInvestmentsLoading(true);
-        const supabase = createClient();
-        const { data: rows, error: fetchError } = await supabase
-          .from('transactions')
-          .select('project_id, amount_usd, projects(title)')
-          .eq('profile_id', user.id)
-          .eq('transaction_type', 'income')
-          .eq('category', 'investment');
-
-        if (cancelled) return;
-        if (fetchError) {
-          setInvestments([]);
-          return;
-        }
-        const list = (rows ?? []) as unknown as { project_id: string; amount_usd: number; projects?: { title: string } | { title: string }[] | null }[];
-        const byProject = new Map<string, { title: string; total: number }>();
-        for (const row of list) {
-          const id = row.project_id;
-          const p = row.projects;
-          const title = Array.isArray(p) ? (p[0]?.title ?? 'Proyecto') : (p?.title ?? 'Proyecto');
-          const prev = byProject.get(id);
-          if (prev) {
-            prev.total += Number(row.amount_usd) || 0;
-          } else {
-            byProject.set(id, { title, total: Number(row.amount_usd) || 0 });
-          }
-        }
-        const result: InvestmentByProject[] = Array.from(byProject.entries()).map(([projectId, { title, total }]) => ({
-          projectId,
-          projectTitle: title,
-          amountInvested: total,
-          status: 'active' as const,
-          tokens: 0,
-          claimable: 0,
-          payoutReceived: 0,
-        }));
-        setInvestments(result);
-      } catch {
-        if (!cancelled) setInvestments([]);
-      } finally {
-        if (!cancelled) setInvestmentsLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.id, paymentConfirmation]);
 
   useEffect(() => {
     if (!user || loading) return;
@@ -130,14 +63,6 @@ export default function DashboardPage() {
       if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(PAYMENT_CONFIRMATION_KEY);
     }
   }, [user, loading]);
-
-  const handleClaim = async (projectId: string) => {
-    setClaimingId(projectId);
-    setTimeout(() => {
-      setClaimingId(null);
-      alert(`Reclamar pago para proyecto ${projectId} (simulación)`);
-    }, 1500);
-  };
 
   if (loading || !user) {
     return (
@@ -216,58 +141,8 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Investments */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>Mis Inversiones</h2>
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid rgba(220, 196, 142, 0.3)' }}>
-            {investmentsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <FontAwesomeIcon icon={faSpinner} spin className="text-3xl" style={{ color: 'var(--color-accent-gold)' }} />
-              </div>
-            ) : investments.length === 0 ? (
-              <div className="py-12 text-center" style={{ color: 'var(--color-subtle-text)' }}>
-                Aún no tienes inversiones. Invierte en un proyecto desde la tabla de abajo.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(220, 196, 142, 0.3)' }}>
-                      <th className="text-left py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Proyecto</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Monto Invertido</th>
-                      <th className="text-center py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Estado</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Tokens</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Pagos por Cobrar</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Pagos Recibidos</th>
-                      <th className="text-center py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {investments.map((investment, index) => (
-                      <tr key={investment.projectId} style={{ borderBottom: index < investments.length - 1 ? '1px solid rgba(220, 196, 142, 0.2)' : 'none' }}>
-                        <td className="py-4 px-6 font-medium" style={{ color: 'var(--foreground)' }}>{investment.projectTitle}</td>
-                        <td className="py-4 px-6 text-right" style={{ color: 'var(--foreground)' }}>{formatCurrency(investment.amountInvested)}</td>
-                        <td className="py-4 px-6 text-center">
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: investment.status === 'active' ? 'rgba(227, 194, 115, 0.18)' : 'rgba(107, 114, 128, 0.18)', color: investment.status === 'active' ? 'var(--color-accent-gold)' : 'var(--color-subtle-text)' }}>
-                            {investment.status === 'active' ? <><FontAwesomeIcon icon={faCheckCircle} /> Activo</> : <><FontAwesomeIcon icon={faClock} /> Pendiente</>}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-right" style={{ color: 'var(--foreground)' }}>{investment.tokens.toLocaleString()}</td>
-                        <td className="py-4 px-6 text-right" style={{ color: 'var(--color-accent-gold)' }}>{formatCurrency(investment.claimable)}</td>
-                        <td className="py-4 px-6 text-right" style={{ color: 'var(--color-accent-gold)' }}>{formatCurrency(investment.payoutReceived)}</td>
-                        <td className="py-4 px-6 text-center">
-                          <button onClick={() => handleClaim(investment.projectId)} disabled={claimingId === investment.projectId || investment.claimable === 0} className="btn-gold px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed" style={{ color: 'var(--color-primary)' }}>
-                            {claimingId === investment.projectId ? <><FontAwesomeIcon icon={faSpinner} spin className="mr-2" /> Reclamando...</> : 'Reclamar Pago'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
+        {/* Investments — from profile_investments */}
+        <InvestmentsTable profileId={user?.id ?? null} refetchTrigger={paymentConfirmation} />
 
         {/* All projects — invest CTA */}
         <ProjectsTable />
