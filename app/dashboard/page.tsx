@@ -12,17 +12,10 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ProjectsTable from '@/components/dashboard/ProjectsTable';
 import InvestmentsTable from '@/components/dashboard/InvestmentsTable';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
+import MetricsBoxes from '@/components/dashboard/MetricsBoxes';
 import ConfirmationModal from '@/components/ConfirmationModal';
 
 const PAYMENT_CONFIRMATION_KEY = 'sportchain_payment_confirmation';
-
-// Mock metrics (can be replaced later with real aggregates from transactions)
-const mockMetrics = {
-  totalInvested: 12500,
-  payoutsReceived: 3200,
-  claimableBalance: 850,
-  returnOnInvestment: Math.round(((3200 + 850) / 12500) * 100),
-};
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -110,27 +103,8 @@ export default function DashboardPage() {
           Bienvenido, {displayName}
         </p>
 
-        {/* Metrics */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid rgba(220, 196, 142, 0.3)' }}>
-              <p className="text-sm mb-2" style={{ color: 'var(--color-subtle-text)' }}>Total Invertido</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--foreground)' }}>{formatCurrency(mockMetrics.totalInvested)}</p>
-            </div>
-            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid rgba(220, 196, 142, 0.3)' }}>
-              <p className="text-sm mb-2" style={{ color: 'var(--color-subtle-text)' }}>Pagos Recibidos</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--color-accent-gold)' }}>{formatCurrency(mockMetrics.payoutsReceived)}</p>
-            </div>
-            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid rgba(220, 196, 142, 0.3)' }}>
-              <p className="text-sm mb-2" style={{ color: 'var(--color-subtle-text)' }}>Pagos por Cobrar</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--color-accent-gold)' }}>{formatCurrency(mockMetrics.claimableBalance)}</p>
-            </div>
-            <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid rgba(220, 196, 142, 0.3)' }}>
-              <p className="text-sm mb-2" style={{ color: 'var(--color-subtle-text)' }}>Capital Recuperado</p>
-              <p className="text-3xl font-bold" style={{ color: 'var(--color-accent-gold)' }}>{mockMetrics.returnOnInvestment}%</p>
-            </div>
-          </div>
-        </section>
+        {/* Metrics — from profile_investments */}
+        <MetricsBoxes profileId={user?.id ?? null} refetchTrigger={paymentConfirmation} />
 
         {/* Investments — from profile_investments */}
         <InvestmentsTable profileId={user?.id ?? null} refetchTrigger={paymentConfirmation} />
