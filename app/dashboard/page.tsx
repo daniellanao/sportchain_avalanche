@@ -8,9 +8,10 @@ import { useProfile } from '@/hooks/useProfile';
 import { isProfileComplete } from '@/lib/supabase/profiles';
 import CompleteProfileForm from '@/components/Auth/CompleteProfileForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLink, faCheckCircle, faClock, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ProjectsTable from '@/components/dashboard/ProjectsTable';
 import InvestmentsTable from '@/components/dashboard/InvestmentsTable';
+import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import ConfirmationModal from '@/components/ConfirmationModal';
 
 const PAYMENT_CONFIRMATION_KEY = 'sportchain_payment_confirmation';
@@ -23,18 +24,8 @@ const mockMetrics = {
   returnOnInvestment: Math.round(((3200 + 850) / 12500) * 100),
 };
 
-const mockTransactions = [
-  { id: '1', date: '2025-01-15', project: 'Complejo de Padel - Buenos Aires', action: 'Investment', amount: 5000, transactionHash: '0x1234567890abcdef1234567890abcdef12345678' },
-  { id: '2', date: '2025-01-10', project: 'Complejo de Padel - Buenos Aires', action: 'Payout', amount: 1200, transactionHash: '0xabcdef1234567890abcdef1234567890abcdef12' },
-  { id: '3', date: '2025-01-05', project: 'Complejo de Padel - Lima', action: 'Investment', amount: 7500, transactionHash: '0x9876543210fedcba9876543210fedcba98765432' },
-  { id: '4', date: '2024-12-28', project: 'Complejo de Padel - Lima', action: 'Payout', amount: 2000, transactionHash: '0xfedcba0987654321fedcba0987654321fedcba09' },
-];
-
 const formatCurrency = (value: number) =>
   value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
-const truncateHash = (hash: string) => `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -147,47 +138,8 @@ export default function DashboardPage() {
         {/* All projects — invest CTA */}
         <ProjectsTable />
 
-        {/* Transaction History */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>Historial de Transacciones</h2>
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid rgba(220, 196, 142, 0.3)' }}>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(220, 196, 142, 0.3)' }}>
-                    <th className="text-left py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Fecha</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Proyecto</th>
-                    <th className="text-center py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Acción</th>
-                    <th className="text-right py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Monto</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold" style={{ color: 'var(--color-subtle-text)' }}>Hash de Transacción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockTransactions.map((transaction, index) => (
-                    <tr key={transaction.id} style={{ borderBottom: index < mockTransactions.length - 1 ? '1px solid rgba(220, 196, 142, 0.2)' : 'none' }}>
-                      <td className="py-4 px-6" style={{ color: 'var(--foreground)' }}>{formatDate(transaction.date)}</td>
-                      <td className="py-4 px-6 font-medium" style={{ color: 'var(--foreground)' }}>{transaction.project}</td>
-                      <td className="py-4 px-6 text-center">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: transaction.action === 'Investment' ? 'rgba(18, 48, 93, 0.15)' : 'rgba(227, 194, 115, 0.18)', color: transaction.action === 'Investment' ? 'var(--color-primary)' : 'var(--color-accent-gold)' }}>
-                          {transaction.action === 'Investment' ? 'Inversión' : 'Payout'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right font-semibold" style={{ color: transaction.action === 'Investment' ? 'var(--foreground)' : 'var(--color-accent-gold)' }}>
-                        {transaction.action === 'Investment' ? '-' : '+'}{formatCurrency(transaction.amount)}
-                      </td>
-                      <td className="py-4 px-6">
-                        <a href={`https://etherscan.io/tx/${transaction.transactionHash}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm hover:underline" style={{ color: 'var(--color-primary)' }}>
-                          <span style={{ fontFamily: 'monospace' }}>{truncateHash(transaction.transactionHash)}</span>
-                          <FontAwesomeIcon icon={faLink} className="text-xs" />
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+        {/* Transaction History — from DB */}
+        <TransactionsTable profileId={user?.id ?? null} />
       </div>
 
       <ConfirmationModal
