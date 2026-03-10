@@ -47,9 +47,11 @@ function signedAmount(transaction_type: string, amount_usd: number): { text: str
 
 export interface TransactionsTableProps {
   profileId: string | null;
+  /** When this value changes, the table refetches (e.g. after a payout claim). */
+  refetchTrigger?: unknown;
 }
 
-export default function TransactionsTable({ profileId }: TransactionsTableProps) {
+export default function TransactionsTable({ profileId, refetchTrigger }: TransactionsTableProps) {
   const [rows, setRows] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -114,7 +116,7 @@ export default function TransactionsTable({ profileId }: TransactionsTableProps)
     return () => {
       cancelled = true;
     };
-  }, [profileId]);
+  }, [profileId, refetchTrigger]);
 
   return (
     <section>

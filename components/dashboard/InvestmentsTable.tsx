@@ -35,9 +35,11 @@ export interface InvestmentsTableProps {
   profileId: string | null;
   /** When this value changes, the table refetches (e.g. after a new payment confirmation). */
   refetchTrigger?: unknown;
+  /** Called after a payout is successfully claimed (so parent can refetch transactions, metrics, etc.). */
+  onPayoutClaimed?: () => void;
 }
 
-export default function InvestmentsTable({ profileId, refetchTrigger }: InvestmentsTableProps) {
+export default function InvestmentsTable({ profileId, refetchTrigger, onPayoutClaimed }: InvestmentsTableProps) {
   const [rows, setRows] = useState<ProfileInvestmentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimingId, setClaimingId] = useState<string | null>(null);
@@ -147,6 +149,7 @@ export default function InvestmentsTable({ profileId, refetchTrigger }: Investme
         )
       );
       setPayoutConfirmation({ amount, projectTitle: row.project_title });
+      onPayoutClaimed?.();
     } finally {
       setClaimingId(null);
     }

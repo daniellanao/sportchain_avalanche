@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useProfile(user?.id, user?.email ?? undefined);
   const [paymentConfirmation, setPaymentConfirmation] = useState<{ amount: number; projectTitle: string } | null>(null);
+  const [payoutClaimedTrigger, setPayoutClaimedTrigger] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -103,17 +104,21 @@ export default function DashboardPage() {
           Bienvenido, {displayName}
         </p>
 
-        {/* Metrics — from profile_investments */}
-        <MetricsBoxes profileId={user?.id ?? null} refetchTrigger={paymentConfirmation} />
+        {/* Metrics — from profile_investments (refetch after new payment or after payout claimed) */}
+        <MetricsBoxes profileId={user?.id ?? null} refetchTrigger={{ payment: paymentConfirmation, payout: payoutClaimedTrigger }} />
 
         {/* Investments — from profile_investments */}
-        <InvestmentsTable profileId={user?.id ?? null} refetchTrigger={paymentConfirmation} />
+        <InvestmentsTable
+          profileId={user?.id ?? null}
+          refetchTrigger={paymentConfirmation}
+          onPayoutClaimed={() => setPayoutClaimedTrigger((t) => t + 1)}
+        />
 
         {/* All projects — invest CTA */}
         <ProjectsTable />
 
         {/* Transaction History — from DB */}
-        <TransactionsTable profileId={user?.id ?? null} />
+        <TransactionsTable profileId={user?.id ?? null} refetchTrigger={payoutClaimedTrigger} />
       </div>
 
       <ConfirmationModal
