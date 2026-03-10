@@ -1,60 +1,53 @@
 # SportChain
 
-**Plataforma para invertir y recibir ganancias mediante instalaciones deportivas en Latinoamérica.**
+**Plataforma para invertir y recibir ganancias mediante la operación de instalaciones deportivas en Latinoamérica.**
 
-SportChain permite a inversores participar en proyectos de infraestructura deportiva (complejos de pádel, fútbol, tenis, etc.), realizar compromisos de inversión y seguir el progreso de sus inversiones desde un dashboard. El proyecto está preparado para integración futura con **Avalanche** (tokenización y trazabilidad on-chain).
+SportChain permite a inversores participar en proyectos de infraestructura deportiva (complejos de pádel, fútbol, tenis, etc.), realizar inversiones, seguir el progreso de sus participaciones y reclamar pagos desde un dashboard. El proyecto está preparado para integración futura con **Avalanche** (tokenización y trazabilidad on-chain).
 
 ---
 
 ## Características
 
 - **Landing y contenido** — Hero, misión/visión, roadmap y comunidad
-- **Catálogo de proyectos** — Listado y fichas de proyectos con metas, progreso y rendimiento esperado
-- **Compromisos de inversión** — Formulario de compromiso por proyecto, persistido en Supabase
-- **Autenticación** — Magic link / OTP con Supabase Auth; perfiles con nombre/apellido
-- **Dashboard privado** — Métricas, inversiones activas, historial de transacciones y reclamo de pagos (UI con datos mock; backend por conectar)
+- **Catálogo de proyectos** — Listado (`/proyectos`) y fichas por proyecto con metas, progreso (comprometido/recaudado) y rendimiento esperado
+- **Inversión por proyecto** — Página dedicada `/invertir/[slug]`: formulario de monto (múltiplos de 100 USD), wallet simulada y registro en `transactions` y lógica de negocio para `profile_investments`
+- **Autenticación** — Magic link / OTP con Supabase Auth; perfiles con nombre y apellido; rutas protegidas (dashboard, invertir)
+- **Dashboard privado** — Métricas agregadas desde `profile_investments`, tabla de inversiones por proyecto (con imagen, ubicación, tokens, pagos por cobrar/recibidos), tabla de todos los proyectos con CTA “Invertir”, historial de transacciones desde `transactions`. Reclamar pago genera transacción tipo expense y actualiza inversiones; modales de confirmación para inversión y pago reclamado
 - **Eventos** — Sección de eventos deportivos
-- **Responsive y accesible** — Tailwind CSS, variables CSS, soporte light/dark según preferencia del sistema
+- **Responsive y accesible** — Tailwind CSS v4, variables CSS, soporte light/dark según preferencia del sistema
 
 ---
 
-## Tech Stack, arquitectura e implementación
-
-### Tech stack
+## Tech stack
 
 | Capa | Tecnología |
 |------|------------|
 | **Framework** | [Next.js 16](https://nextjs.org) (App Router) |
 | **UI** | [React 19](https://react.dev), [TypeScript](https://www.typescriptlang.org) |
 | **Estilos** | [Tailwind CSS v4](https://tailwindcss.com), variables CSS (tema light/dark) |
-| **Backend / Auth / DB** | [Supabase](https://supabase.com) (Auth, PostgreSQL, realtime opcional) |
+| **Backend / Auth / DB** | [Supabase](https://supabase.com) (Auth, PostgreSQL) |
 | **Iconos** | [Font Awesome](https://fontawesome.com) (React) |
 | **Fuentes** | Google Fonts: Open Sans (cuerpo), Montserrat (títulos) |
 
-### Decisiones de arquitectura
+---
 
-- **Next.js App Router** — Rutas en `app/`, Server Components por defecto y Client Components solo donde hace falta (forms, auth, dashboard). Favorece SEO y reducción de JS en cliente.
-- **Supabase como BaaS** — Un solo backend para auth, perfiles (`profiles`), proyectos (`projects`) y compromisos (`commitments`). Se evita un backend Node/Express propio en esta fase; la anon key y RLS permiten seguridad por fila.
-- **Auth con Magic Link / OTP** — Sin contraseñas para el MVP; flujo manejado con `@supabase/ssr` en middleware para refresco de sesión y rutas protegidas (p. ej. `/dashboard`, `/login`).
-- **Contexto de auth en cliente** — `AuthContext` + `Providers` envuelven la app para exponer `user`, `session`, `loading` y `signOut` a cualquier componente. El middleware se encarga de refrescar cookies de sesión en cada request.
-- **Dos clientes Supabase** — `createClient()` en `lib/supabase/client.ts` para uso en navegador (Client Components); `createClient()` en `lib/supabase/server.ts` para Server Components y Route Handlers, usando cookies de Next.
-- **Datos del dashboard** — La pantalla de dashboard usa actualmente datos mock (inversiones, transacciones, métricas). La estructura está pensada para reemplazarlos por datos reales de Supabase (y en el futuro, de Avalanche) sin cambiar la UI.
-- **Proyectos desde Supabase** — Las fichas de proyecto (ej. `/proyectos/padel_buenos_aires`) leen de la tabla `projects` por `slug`; los compromisos se guardan en `commitments` y se reflejan en el progreso del proyecto cuando se actualice `amount_committed_usd` (vía triggers o jobs).
+## Arquitectura y decisiones
 
-### Enfoque de implementación
-
-- **Componentes por sección** — `components/home/` (Hero, MisionVision, Roadmap, Community), `components/projects/` (ProjectHero), `components/Auth/` (MagicOtpLogin, CompleteProfileForm). Navbar y Footer globales.
-- **Rutas principales** — `/` (landing), `/proyectos` (listado), `/proyectos/[slug]` (ficha + formulario de inversión), `/eventos`, `/dashboard` (protegida), `/login`, `/demo`. Callback de auth en `/auth/callback`.
-- **Hooks y utilidades** — `useAuth()` para estado global de auth; `useProfile()` para cargar/completar perfil; helpers en `lib/supabase/profiles.ts` (p. ej. `isProfileComplete`).
-- **Estilos** — Paleta en `app/globals.css` (primary, accent-gold, surface, subtle-text) y `@theme` de Tailwind para uso consistente; clases utilitarias y componentes reutilizables (botones, cards) alineados con la marca.
-- **Preparación para Avalanche** — El nombre del repo y la presencia de conceptos como “tokens” y “transaction hash” en el dashboard apuntan a una segunda fase con blockchain (tokenización de participaciones, pagos y auditoría on-chain).
+- **Next.js App Router** — Rutas en `app/`. Client Components donde hace falta (formularios, auth, dashboard, tablas).
+- **Supabase como BaaS** — Auth, perfiles (`profiles`), proyectos (`projects`), compromisos (`commitments`), inversiones por perfil (`profile_investments`) y transacciones (`transactions`). Cliente browser en `lib/supabase/client.ts` y cliente servidor en `lib/supabase/server.ts`; middleware para refresco de sesión.
+- **Auth** — Magic link / OTP; `AuthContext` + `Providers` en cliente; `useProfile()` y `isProfileComplete()` para completar perfil antes de acceder al dashboard.
+- **Dashboard por componentes** — `MetricsBoxes` (desde `profile_investments`), `InvestmentsTable` (inversiones por proyecto, reclamar pago), `ProjectsTable` (listado de proyectos con Invertir), `TransactionsTable` (historial desde `transactions`). Confirmaciones con `ConfirmationModal` reutilizable.
+- **Flujo de inversión** — Dashboard o proyectos → “Invertir” → `/invertir/[slug]` (solo si logueado). Formulario: monto (múltiplos de 100), wallet simulada; al enviar: insert en `transactions` (tipo income) y lógica/triggers para mantener `profile_investments`; redirección a dashboard con modal de confirmación.
+- **Preparación para Avalanche** — Utilidad en `lib/wallet.ts` para conectar wallet (Avalanche C-Chain). En la app, el flujo de invertir usa por ahora una wallet simulada; los hashes de transacción son generados localmente para trazabilidad futura.
 
 ---
 
 ## Requisitos previos
 
 - [Node.js](https://nodejs.org) 20+
-- Cuenta [Supabase](https://supabase.com) (proyecto con tablas `profiles`, `projects`, `commitments` y Auth habilitado)
+- Cuenta [Supabase](https://supabase.com) con:
+  - Auth habilitado
+  - Tablas: `profiles`, `projects`, `commitments`, `profile_investments`, `transactions` (y triggers/vistas que mantengan agregados y progreso)
 
 ---
 
@@ -62,14 +55,14 @@ SportChain permite a inversores participar en proyectos de infraestructura depor
 
 ```bash
 # Clonar e instalar dependencias
-git clone <repo-url>
+git clone https://github.com/daniellanao/sportchain_avalanche.git
 cd sportchain_avalanche
 npm install
+```
 
-# Variables de entorno (crear .env.local)
-# NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+Crea `.env.local` en la raíz con las variables de Supabase (ver sección siguiente).
 
+```bash
 # Desarrollo
 npm run dev
 ```
@@ -83,13 +76,13 @@ Abre [http://localhost:3000](http://localhost:3000).
 | `npm run dev` | Servidor de desarrollo |
 | `npm run build` | Build de producción |
 | `npm run start` | Servidor de producción |
-| `npm run lint` | Linter (ESLint) |
+| `npm run lint` | ESLint |
 
 ---
 
 ## Variables de entorno
 
-Crea `.env.local` en la raíz:
+En la raíz, crea `.env.local`:
 
 | Variable | Descripción |
 |----------|-------------|
@@ -98,32 +91,64 @@ Crea `.env.local` en la raíz:
 
 ---
 
-## Estructura del proyecto (resumen)
+## Estructura del proyecto
 
 ```
-├── app/                    # App Router: páginas y layouts
-│   ├── page.tsx            # Landing
-│   ├── layout.tsx          # Layout raíz (fonts, metadata, Providers, Footer)
-│   ├── globals.css         # Variables de tema y Tailwind
-│   ├── proyectos/          # Listado y ficha de proyectos
+├── app/
+│   ├── page.tsx                 # Landing
+│   ├── layout.tsx               # Layout raíz (fonts, metadata, Providers, Footer)
+│   ├── globals.css              # Variables de tema y Tailwind
+│   ├── proyectos/               # Listado y ficha de proyectos
+│   │   ├── page.tsx             # Listado de proyectos
+│   │   └── padel_buenos_aires/  # Ficha ejemplo (slug)
+│   ├── invertir/[slug]/         # Página de inversión por proyecto (protegida)
+│   ├── dashboard/               # Dashboard (protegido)
 │   ├── eventos/
-│   ├── dashboard/          # Área privada (inversiones, métricas)
 │   ├── login/
-│   ├── auth/               # callback, error
+│   ├── auth/                    # callback, error
 │   └── demo/
-├── components/             # Componentes React (Navbar, Footer, forms, cards, etc.)
-├── context/                # AuthContext
-├── hooks/                  # useProfile, etc.
-├── lib/supabase/           # Cliente browser, servidor, middleware, profiles
-├── data/                   # Datos estáticos (ej. events)
-└── middleware.ts           # Refresco de sesión Supabase
+├── components/
+│   ├── dashboard/               # Componentes del dashboard
+│   │   ├── MetricsBoxes.tsx     # Métricas desde profile_investments
+│   │   ├── InvestmentsTable.tsx # Mis inversiones, reclamar pago
+│   │   ├── ProjectsTable.tsx    # Todos los proyectos, CTA Invertir
+│   │   └── TransactionsTable.tsx# Historial de transacciones
+│   ├── Auth/                    # MagicOtpLogin, CompleteProfileForm
+│   ├── home/                    # Hero, MisionVision, Roadmap, Community
+│   ├── projects/                # ProjectHero
+│   ├── ConfirmationModal.tsx    # Modal reutilizable (éxito pago/inversión)
+│   ├── ProjectCard.tsx
+│   ├── Navbar.tsx
+│   └── Footer.tsx
+├── context/
+│   └── AuthContext.tsx
+├── hooks/
+│   └── useProfile.ts
+├── lib/
+│   ├── supabase/                # client, server, middleware, profiles
+│   └── wallet.ts                # Utilidad Avalanche C-Chain (opcional)
+└── middleware.ts                # Refresco de sesión Supabase
 ```
+
+---
+
+## Rutas principales
+
+| Ruta | Descripción | Acceso |
+|------|-------------|--------|
+| `/` | Landing | Público |
+| `/proyectos` | Listado de proyectos | Público |
+| `/proyectos/[slug]` | Ficha de proyecto (ej. padel_buenos_aires) | Público |
+| `/invertir/[slug]` | Formulario de inversión (monto, wallet) | Logueado |
+| `/dashboard` | Métricas, mis inversiones, proyectos, transacciones | Logueado + perfil completo |
+| `/login` | Inicio de sesión (Magic link / OTP) | Público |
+| `/eventos` | Eventos deportivos | Público |
 
 ---
 
 ## Despliegue
 
-Puedes desplegar en [Vercel](https://vercel.com) u otra plataforma compatible con Next.js. Configura las variables de entorno en el panel del proveedor. Consulta la [documentación de despliegue de Next.js](https://nextjs.org/docs/app/building-your-application/deploying).
+Puedes desplegar en [Vercel](https://vercel.com) u otra plataforma compatible con Next.js. Configura `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en el panel del proveedor. Consulta la [documentación de despliegue de Next.js](https://nextjs.org/docs/app/building-your-application/deploying).
 
 ---
 
