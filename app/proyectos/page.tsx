@@ -48,6 +48,8 @@ function rowToProject(row: ProjectRow): Project {
     targetGoalUsd: Number(row.amount_target_usd) || 0,
     committedUsd: Number(row.amount_committed_usd) || 0,
     progressPercent: Number(row.progress_committed_percent) ?? 0,
+    collectedUsd: Number(row.amount_collected_usd) || 0,
+    progressCollectedPercent: Number(row.progress_collected_percent) ?? 0,
     sportType: row.sport ?? 'Deporte',
     slug: row.slug,
   };
